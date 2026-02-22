@@ -1,0 +1,119 @@
+{% load i18n %}
+{% load djicons %}
+
+<div class="p-4">
+    <div class="flex items-center gap-3 mb-4">
+        <button class="btn btn-ghost btn-sm"
+            hx-get="{% url 'expenses:suppliers' %}"
+            hx-target="#main-content-area"
+            hx-push-url="true">
+            {% icon "arrow-back-outline" %}
+        </button>
+        <h2 class="text-xl font-semibold">
+            {% if is_edit %}{% trans "Editar Proveedor" %}{% else %}{% trans "Nuevo Proveedor" %}{% endif %}
+        </h2>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post"
+                  hx-post="{% if is_edit %}{% url 'expenses:supplier_edit' supplier.pk %}{% else %}{% url 'expenses:supplier_create' %}{% endif %}"
+                  hx-target="#main-content-area">
+                {% csrf_token %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Name -->
+                    <div class="form-group md:col-span-2">
+                        <label class="form-group-label">{% trans "Nombre" %} *</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <p class="text-sm text-error mt-1">{{ form.name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Contact Name -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Persona de Contacto" %}</label>
+                        {{ form.contact_name }}
+                    </div>
+
+                    <!-- Tax ID -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "NIF/CIF" %}</label>
+                        {{ form.tax_id }}
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Email" %}</label>
+                        {{ form.email }}
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Telefono" %}</label>
+                        {{ form.phone }}
+                    </div>
+
+                    <!-- Address -->
+                    <div class="form-group md:col-span-2">
+                        <label class="form-group-label">{% trans "Direccion" %}</label>
+                        {{ form.address }}
+                    </div>
+
+                    <!-- City -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Ciudad" %}</label>
+                        {{ form.city }}
+                    </div>
+
+                    <!-- Postal Code -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Codigo Postal" %}</label>
+                        {{ form.postal_code }}
+                    </div>
+
+                    <!-- Country -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Pais" %}</label>
+                        {{ form.country }}
+                    </div>
+
+                    <!-- Website -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Sitio Web" %}</label>
+                        {{ form.website }}
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="form-group md:col-span-2">
+                        <label class="form-group-label">{% trans "Notas" %}</label>
+                        {{ form.notes }}
+                    </div>
+
+                    <!-- Active -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Activo" %}</label>
+                        <label class="toggle color-success">
+                            {{ form.is_active }}
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" class="btn btn-outline"
+                        hx-get="{% url 'expenses:suppliers' %}"
+                        hx-target="#main-content-area"
+                        hx-push-url="true">
+                        {% trans "Cancelar" %}
+                    </button>
+                    <button type="submit" class="btn color-primary">
+                        {% icon "save-outline" %}
+                        {% if is_edit %}{% trans "Guardar Cambios" %}{% else %}{% trans "Crear Proveedor" %}{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

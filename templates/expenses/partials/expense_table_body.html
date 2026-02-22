@@ -1,0 +1,88 @@
+{% load i18n %}
+{% load djicons %}
+
+<div class="overflow-x-auto">
+    <table class="table w-full">
+        <thead class="table-head">
+            <tr>
+                <th class="table-th">{% trans "Numero" %}</th>
+                <th class="table-th">{% trans "Titulo" %}</th>
+                <th class="table-th">{% trans "Categoria" %}</th>
+                <th class="table-th">{% trans "Proveedor" %}</th>
+                <th class="table-th">{% trans "Fecha" %}</th>
+                <th class="table-th text-right">{% trans "Total" %}</th>
+                <th class="table-th text-center">{% trans "Estado" %}</th>
+            </tr>
+        </thead>
+        <tbody class="table-body">
+            {% for expense in expenses %}
+            <tr class="table-row cursor-pointer"
+                hx-get="{% url 'expenses:expense_detail' expense.pk %}"
+                hx-target="#main-content-area"
+                hx-push-url="true">
+                <td class="table-td font-mono text-sm">{{ expense.expense_number }}</td>
+                <td class="table-td font-medium">{{ expense.title }}</td>
+                <td class="table-td">
+                    {% if expense.category %}
+                    <div class="flex items-center gap-1">
+                        <div class="w-2 h-2 rounded-full" style="background-color: {{ expense.category.color }}"></div>
+                        {{ expense.category.name }}
+                    </div>
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td class="table-td">{{ expense.supplier.name|default:"-" }}</td>
+                <td class="table-td">{{ expense.expense_date|date:"d/m/Y" }}</td>
+                <td class="table-td text-right font-semibold">{{ expense.total_amount|floatformat:2 }}</td>
+                <td class="table-td text-center">
+                    {% if expense.status == 'draft' %}
+                        <span class="badge badge-sm">{% trans "Borrador" %}</span>
+                    {% elif expense.status == 'pending' %}
+                        <span class="badge badge-sm color-warning">{% trans "Pendiente" %}</span>
+                    {% elif expense.status == 'approved' %}
+                        <span class="badge badge-sm color-primary">{% trans "Aprobado" %}</span>
+                    {% elif expense.status == 'paid' %}
+                        <span class="badge badge-sm color-success">{% trans "Pagado" %}</span>
+                    {% elif expense.status == 'rejected' %}
+                        <span class="badge badge-sm color-error">{% trans "Rechazado" %}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td class="table-td text-center text-muted" colspan="7">
+                    <div class="py-8">
+                        {% icon "receipt-outline" css_class="text-4xl block mx-auto mb-2" %}
+                        <p>{% trans "No se encontraron gastos" %}</p>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if page_obj.has_other_pages %}
+<div class="datatable-footer">
+    <div class="datatable-footer-info">
+        {% trans "Pagina" %} {{ page_obj.number }} {% trans "de" %} {{ page_obj.paginator.num_pages }}
+    </div>
+    <div class="datatable-footer-nav">
+        {% if page_obj.has_previous %}
+        <button class="btn btn-ghost btn-sm"
+            hx-get="{% url 'expenses:expense_list' %}?page={{ page_obj.previous_page_number }}&search={{ search }}&status={{ status_filter }}&date_from={{ date_from }}&date_to={{ date_to }}"
+            hx-target="#expenses-table-container">
+            {% icon "chevron-back-outline" %}
+        </button>
+        {% endif %}
+        {% if page_obj.has_next %}
+        <button class="btn btn-ghost btn-sm"
+            hx-get="{% url 'expenses:expense_list' %}?page={{ page_obj.next_page_number }}&search={{ search }}&status={{ status_filter }}&date_from={{ date_from }}&date_to={{ date_to }}"
+            hx-target="#expenses-table-container">
+            {% icon "chevron-forward-outline" %}
+        </button>
+        {% endif %}
+    </div>
+</div>
+{% endif %}

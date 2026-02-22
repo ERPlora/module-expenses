@@ -1,0 +1,90 @@
+{% load i18n %}
+{% load djicons %}
+
+<div class="p-4">
+    <div class="flex items-center gap-3 mb-4">
+        <button class="btn btn-ghost btn-sm"
+            hx-get="{% url 'expenses:categories' %}"
+            hx-target="#main-content-area"
+            hx-push-url="true">
+            {% icon "arrow-back-outline" %}
+        </button>
+        <h2 class="text-xl font-semibold">
+            {% if is_edit %}{% trans "Editar Categoria" %}{% else %}{% trans "Nueva Categoria" %}{% endif %}
+        </h2>
+    </div>
+
+    <div class="card" style="max-width: 600px;">
+        <div class="card-body">
+            <form method="post"
+                  hx-post="{% if is_edit %}{% url 'expenses:category_edit' category.pk %}{% else %}{% url 'expenses:category_create' %}{% endif %}"
+                  hx-target="#main-content-area">
+                {% csrf_token %}
+
+                <div class="space-y-4">
+                    <!-- Name -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Nombre" %} *</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <p class="text-sm text-error mt-1">{{ form.name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Icon -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Icono" %}</label>
+                        {{ form.icon }}
+                        <p class="text-xs text-muted mt-1">{% trans "Nombre del icono Ionicons (ej: folder-outline)" %}</p>
+                    </div>
+
+                    <!-- Color -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Color" %}</label>
+                        {{ form.color }}
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Descripcion" %}</label>
+                        {{ form.description }}
+                    </div>
+
+                    <!-- Parent -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Categoria Padre" %}</label>
+                        {{ form.parent }}
+                    </div>
+
+                    <!-- Sort Order -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Orden" %}</label>
+                        {{ form.sort_order }}
+                    </div>
+
+                    <!-- Active -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Activa" %}</label>
+                        <label class="toggle color-success">
+                            {{ form.is_active }}
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" class="btn btn-outline"
+                        hx-get="{% url 'expenses:categories' %}"
+                        hx-target="#main-content-area"
+                        hx-push-url="true">
+                        {% trans "Cancelar" %}
+                    </button>
+                    <button type="submit" class="btn color-primary">
+                        {% icon "save-outline" %}
+                        {% if is_edit %}{% trans "Guardar Cambios" %}{% else %}{% trans "Crear Categoria" %}{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,204 @@
+{% load i18n %}
+{% load djicons %}
+
+<div class="p-4" x-data="{ showDeleteConfirm: false }">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+            <button class="btn btn-ghost btn-sm"
+                hx-get="{% url 'expenses:suppliers' %}"
+                hx-target="#main-content-area"
+                hx-push-url="true">
+                {% icon "arrow-back-outline" %}
+            </button>
+            <h2 class="text-xl font-semibold">{{ supplier.name }}</h2>
+            {% if not supplier.is_active %}
+            <span class="badge color-warning">{% trans "Inactivo" %}</span>
+            {% endif %}
+        </div>
+        <div class="flex items-center gap-2">
+            <button class="btn btn-sm btn-outline"
+                hx-get="{% url 'expenses:supplier_edit' supplier.pk %}"
+                hx-target="#main-content-area"
+                hx-push-url="true">
+                {% icon "create-outline" %} {% trans "Editar" %}
+            </button>
+            <button class="btn btn-sm btn-outline color-error"
+                @click="showDeleteConfirm = true">
+                {% icon "trash-outline" %}
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- Contact Info -->
+        <div class="lg:col-span-2">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Informacion de Contacto" %}</h3>
+                </div>
+                <div class="list">
+                    {% if supplier.contact_name %}
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Persona de Contacto" %}</div>
+                        </div>
+                        <div class="list-item-end">{{ supplier.contact_name }}</div>
+                    </div>
+                    {% endif %}
+                    {% if supplier.email %}
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Email" %}</div>
+                        </div>
+                        <div class="list-item-end">{{ supplier.email }}</div>
+                    </div>
+                    {% endif %}
+                    {% if supplier.phone %}
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Telefono" %}</div>
+                        </div>
+                        <div class="list-item-end">{{ supplier.phone }}</div>
+                    </div>
+                    {% endif %}
+                    {% if supplier.tax_id %}
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "NIF/CIF" %}</div>
+                        </div>
+                        <div class="list-item-end">{{ supplier.tax_id }}</div>
+                    </div>
+                    {% endif %}
+                    {% if supplier.website %}
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Sitio Web" %}</div>
+                        </div>
+                        <div class="list-item-end">
+                            <a href="{{ supplier.website }}" target="_blank" class="text-primary">{{ supplier.website }}</a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if supplier.address %}
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Direccion" %}</div>
+                        </div>
+                        <div class="list-item-end">
+                            {{ supplier.address }}
+                            {% if supplier.city %}<br>{{ supplier.postal_code }} {{ supplier.city }}{% endif %}
+                            {% if supplier.country %}<br>{{ supplier.country }}{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if supplier.notes %}
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Notas" %}</div>
+                        </div>
+                        <div class="list-item-end">{{ supplier.notes }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Expenses -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Gastos Recientes" %}</h3>
+                </div>
+                {% if recent_expenses %}
+                <div class="overflow-x-auto">
+                    <table class="table w-full">
+                        <thead class="table-head">
+                            <tr>
+                                <th class="table-th">{% trans "Numero" %}</th>
+                                <th class="table-th">{% trans "Titulo" %}</th>
+                                <th class="table-th">{% trans "Fecha" %}</th>
+                                <th class="table-th text-right">{% trans "Total" %}</th>
+                                <th class="table-th text-center">{% trans "Estado" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-body">
+                            {% for expense in recent_expenses %}
+                            <tr class="table-row cursor-pointer"
+                                hx-get="{% url 'expenses:expense_detail' expense.pk %}"
+                                hx-target="#main-content-area"
+                                hx-push-url="true">
+                                <td class="table-td font-mono text-sm">{{ expense.expense_number }}</td>
+                                <td class="table-td">{{ expense.title }}</td>
+                                <td class="table-td">{{ expense.expense_date|date:"d/m/Y" }}</td>
+                                <td class="table-td text-right font-semibold">{{ expense.total_amount|floatformat:2 }}</td>
+                                <td class="table-td text-center">
+                                    {% if expense.status == 'paid' %}
+                                        <span class="badge badge-sm color-success">{% trans "Pagado" %}</span>
+                                    {% elif expense.status == 'approved' %}
+                                        <span class="badge badge-sm color-primary">{% trans "Aprobado" %}</span>
+                                    {% elif expense.status == 'pending' %}
+                                        <span class="badge badge-sm color-warning">{% trans "Pendiente" %}</span>
+                                    {% else %}
+                                        <span class="badge badge-sm">{{ expense.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="card-body text-center py-6 text-muted">
+                    <p>{% trans "No hay gastos con este proveedor" %}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar Stats -->
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Resumen" %}</h3>
+                </div>
+                <div class="list">
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Total Gastado" %}</div>
+                        </div>
+                        <div class="list-item-end font-bold text-lg">{{ supplier.total_spent|floatformat:2 }} {{ HUB_CONFIG.currency|default:"EUR" }}</div>
+                    </div>
+                    {% if supplier.last_purchase_date %}
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Ultima Compra" %}</div>
+                        </div>
+                        <div class="list-item-end">{{ supplier.last_purchase_date|date:"d/m/Y" }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-backdrop" :data-state="showDeleteConfirm ? 'open' : 'closed'" @click.self="showDeleteConfirm = false">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">{% trans "Eliminar Proveedor" %}</h3>
+                <button class="modal-close" @click="showDeleteConfirm = false">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>{% trans "Estas seguro de que quieres eliminar este proveedor?" %}</p>
+                <p class="text-sm text-muted mt-2">{{ supplier.name }}</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @click="showDeleteConfirm = false">{% trans "Cancelar" %}</button>
+                <button class="btn color-error"
+                    hx-post="{% url 'expenses:supplier_delete' supplier.pk %}"
+                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                    hx-on::after-request="if(event.detail.successful) { window.location.href = '/m/expenses/suppliers/'; }">
+                    {% icon "trash-outline" %} {% trans "Eliminar" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

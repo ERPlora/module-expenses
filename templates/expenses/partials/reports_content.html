@@ -1,0 +1,191 @@
+{% load i18n %}
+{% load djicons %}
+
+<div class="p-4">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold">{% trans "Informes de Gastos" %}</h2>
+        <div class="flex gap-2">
+            {% for p_key, p_label in "week,Semana|month,Mes|quarter,Trimestre|year,Ano"|make_list %}
+            {% endfor %}
+            <button class="btn btn-sm {% if period == 'week' %}color-primary{% else %}btn-outline{% endif %}"
+                hx-get="{% url 'expenses:reports' %}?period=week"
+                hx-target="#main-content-area"
+                hx-push-url="true">
+                {% trans "Semana" %}
+            </button>
+            <button class="btn btn-sm {% if period == 'month' %}color-primary{% else %}btn-outline{% endif %}"
+                hx-get="{% url 'expenses:reports' %}?period=month"
+                hx-target="#main-content-area"
+                hx-push-url="true">
+                {% trans "Mes" %}
+            </button>
+            <button class="btn btn-sm {% if period == 'quarter' %}color-primary{% else %}btn-outline{% endif %}"
+                hx-get="{% url 'expenses:reports' %}?period=quarter"
+                hx-target="#main-content-area"
+                hx-push-url="true">
+                {% trans "Trimestre" %}
+            </button>
+            <button class="btn btn-sm {% if period == 'year' %}color-primary{% else %}btn-outline{% endif %}"
+                hx-get="{% url 'expenses:reports' %}?period=year"
+                hx-target="#main-content-area"
+                hx-push-url="true">
+                {% trans "Ano" %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="card">
+            <div class="card-body p-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-error/10 rounded-xl flex items-center justify-center">
+                        {% icon "wallet-outline" css_class="text-2xl text-error" %}
+                    </div>
+                    <div>
+                        <div class="text-sm text-muted">{% trans "Total Gastos" %}</div>
+                        <div class="text-2xl font-semibold">{{ total_expenses|floatformat:2 }} {{ HUB_CONFIG.currency|default:"EUR" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                        {% icon "receipt-outline" css_class="text-2xl text-primary" %}
+                    </div>
+                    <div>
+                        <div class="text-sm text-muted">{% trans "Numero de Gastos" %}</div>
+                        <div class="text-2xl font-semibold">{{ total_count }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-warning/10 rounded-xl flex items-center justify-center">
+                        {% icon "calculator-outline" css_class="text-2xl text-warning" %}
+                    </div>
+                    <div>
+                        <div class="text-sm text-muted">{% trans "IVA Total" %}</div>
+                        <div class="text-2xl font-semibold">{{ total_tax|floatformat:2 }} {{ HUB_CONFIG.currency|default:"EUR" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- By Category -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{% trans "Por Categoria" %}</h3>
+            </div>
+            <div class="card-body">
+                {% if by_category %}
+                <div class="space-y-3">
+                    {% for cat in by_category %}
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full" style="background-color: {{ cat.category__color }}"></div>
+                            <span>{{ cat.category__name }}</span>
+                            <span class="badge badge-sm">{{ cat.count }}</span>
+                        </div>
+                        <span class="font-semibold">{{ cat.total|floatformat:2 }} {{ HUB_CONFIG.currency|default:"EUR" }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center text-muted py-6">{% trans "No hay datos por categoria" %}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- By Supplier -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{% trans "Por Proveedor (Top 10)" %}</h3>
+            </div>
+            <div class="card-body">
+                {% if by_supplier %}
+                <div class="space-y-3">
+                    {% for sup in by_supplier %}
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            {% icon "business-outline" css_class="text-muted" %}
+                            <span>{{ sup.supplier__name }}</span>
+                            <span class="badge badge-sm">{{ sup.count }}</span>
+                        </div>
+                        <span class="font-semibold">{{ sup.total|floatformat:2 }} {{ HUB_CONFIG.currency|default:"EUR" }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center text-muted py-6">{% trans "No hay datos por proveedor" %}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- By Status -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{% trans "Por Estado" %}</h3>
+            </div>
+            <div class="card-body">
+                {% if by_status %}
+                <div class="space-y-3">
+                    {% for item in by_status %}
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            {% if item.status == 'draft' %}
+                                <span class="badge badge-sm">{% trans "Borrador" %}</span>
+                            {% elif item.status == 'pending' %}
+                                <span class="badge badge-sm color-warning">{% trans "Pendiente" %}</span>
+                            {% elif item.status == 'approved' %}
+                                <span class="badge badge-sm color-primary">{% trans "Aprobado" %}</span>
+                            {% elif item.status == 'paid' %}
+                                <span class="badge badge-sm color-success">{% trans "Pagado" %}</span>
+                            {% elif item.status == 'rejected' %}
+                                <span class="badge badge-sm color-error">{% trans "Rechazado" %}</span>
+                            {% endif %}
+                            <span class="text-sm text-muted">({{ item.count }})</span>
+                        </div>
+                        <span class="font-semibold">{{ item.total|floatformat:2 }} {{ HUB_CONFIG.currency|default:"EUR" }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center text-muted py-6">{% trans "No hay datos" %}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Monthly Trend -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{% trans "Tendencia Mensual" %}</h3>
+            </div>
+            <div class="card-body">
+                {% if monthly_trend %}
+                <div class="space-y-3">
+                    {% for month in monthly_trend %}
+                    <div class="flex items-center justify-between">
+                        <span>{{ month.month|date:"M Y" }}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="badge badge-sm">{{ month.count }}</span>
+                            <span class="font-semibold">{{ month.total|floatformat:2 }} {{ HUB_CONFIG.currency|default:"EUR" }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center text-muted py-6">{% trans "No hay datos mensuales" %}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

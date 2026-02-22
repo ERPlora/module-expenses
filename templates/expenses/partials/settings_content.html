@@ -1,0 +1,185 @@
+{% load i18n %}
+{% load djicons %}
+
+<script>
+function expenseSettingsApp() {
+    return {
+        settings: {
+            require_approval: {{ config.require_approval|lower }},
+            approval_threshold: {{ config.approval_threshold }},
+            default_tax_rate: {{ config.default_tax_rate }},
+            default_currency: '{{ config.default_currency|escapejs }}',
+            auto_numbering: {{ config.auto_numbering|lower }},
+            number_prefix: '{{ config.number_prefix|escapejs }}'
+        },
+        saving: false,
+
+        async updateSetting(key, value) {
+            const oldValue = this.settings[key];
+            this.settings[key] = value;
+
+            try {
+                const response = await fetch('{% url "expenses:settings_save" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(this.settings)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    this.showToast('{% trans "Configuracion guardada" %}', 'success');
+                } else {
+                    throw new Error(result.error || '{% trans "Error al guardar" %}');
+                }
+            } catch (error) {
+                this.showToast(error.message || '{% trans "Error al guardar" %}', 'error');
+                this.settings[key] = oldValue;
+            }
+        },
+
+        async saveAll() {
+            this.saving = true;
+            try {
+                const response = await fetch('{% url "expenses:settings_save" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(this.settings)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    this.showToast('{% trans "Configuracion guardada" %}', 'success');
+                } else {
+                    throw new Error(result.error || '{% trans "Error al guardar" %}');
+                }
+            } catch (error) {
+                this.showToast(error.message || '{% trans "Error al guardar" %}', 'error');
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        showToast(message, type = 'primary') {
+            if (window.UX && window.UX.toast) {
+                window.UX.toast(message, { type: type });
+            } else {
+                console.log('[Toast]', type, message);
+            }
+        }
+    }
+}
+</script>
+
+{% csrf_token %}
+<div x-data="expenseSettingsApp()" class="p-4">
+
+    <!-- Approval Settings -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="card-title">{% icon "checkmark-circle-outline" css_class="text-primary" %} {% trans "Aprobaciones" %}</h3>
+        </div>
+        <div class="list">
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-label">{% trans "Requerir Aprobacion" %}</div>
+                    <div class="list-item-note">{% trans "Los gastos deben ser aprobados antes de marcarse como pagados" %}</div>
+                </div>
+                <div class="list-item-end">
+                    <label class="toggle color-success">
+                        <input type="checkbox"
+                            :checked="settings.require_approval"
+                            @change="updateSetting('require_approval', $event.target.checked)">
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    </label>
+                </div>
+            </div>
+            <div class="list-item" x-show="settings.require_approval">
+                <div class="list-item-content">
+                    <div class="list-item-label">{% trans "Umbral de Aprobacion" %}</div>
+                    <div class="list-item-note">{% trans "Gastos por encima de este importe requieren aprobacion (0 = todos)" %}</div>
+                </div>
+                <div class="list-item-end">
+                    <input type="number" class="input" style="width: 120px"
+                        step="0.01" min="0"
+                        x-model="settings.approval_threshold"
+                        @change="saveAll()">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tax & Currency -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="card-title">{% icon "calculator-outline" css_class="text-warning" %} {% trans "Impuestos y Moneda" %}</h3>
+        </div>
+        <div class="list">
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-label">{% trans "Tasa de IVA por Defecto (%)" %}</div>
+                    <div class="list-item-note">{% trans "Tasa de impuesto aplicada automaticamente a nuevos gastos" %}</div>
+                </div>
+                <div class="list-item-end">
+                    <input type="number" class="input" style="width: 100px"
+                        step="0.01" min="0" max="100"
+                        x-model="settings.default_tax_rate"
+                        @change="saveAll()">
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-label">{% trans "Moneda por Defecto" %}</div>
+                </div>
+                <div class="list-item-end">
+                    <input type="text" class="input" style="width: 80px"
+                        maxlength="3"
+                        x-model="settings.default_currency"
+                        @change="saveAll()">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Numbering -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="card-title">{% icon "list-outline" css_class="text-success" %} {% trans "Numeracion" %}</h3>
+        </div>
+        <div class="list">
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-label">{% trans "Numeracion Automatica" %}</div>
+                    <div class="list-item-note">{% trans "Generar automaticamente numeros de gasto" %}</div>
+                </div>
+                <div class="list-item-end">
+                    <label class="toggle color-success">
+                        <input type="checkbox"
+                            :checked="settings.auto_numbering"
+                            @change="updateSetting('auto_numbering', $event.target.checked)">
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    </label>
+                </div>
+            </div>
+            <div class="list-item" x-show="settings.auto_numbering">
+                <div class="list-item-content">
+                    <div class="list-item-label">{% trans "Prefijo de Numeracion" %}</div>
+                    <div class="list-item-note">{% trans "Ej: EXP -> EXP-20260222-0001" %}</div>
+                </div>
+                <div class="list-item-end">
+                    <input type="text" class="input" style="width: 100px"
+                        maxlength="10"
+                        x-model="settings.number_prefix"
+                        @change="saveAll()">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

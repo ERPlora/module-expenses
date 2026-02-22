@@ -1,0 +1,92 @@
+{% load i18n %}
+{% load djicons %}
+
+<div class="p-4">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold">{% trans "Gastos" %}</h2>
+        <button class="btn color-primary btn-sm"
+            hx-get="{% url 'expenses:expense_create' %}"
+            hx-target="#main-content-area"
+            hx-push-url="true">
+            {% icon "add-outline" %} {% trans "Nuevo Gasto" %}
+        </button>
+    </div>
+
+    <div class="datatable datatable-bordered datatable-responsive">
+        <!-- Toolbar with filters -->
+        <div class="datatable-toolbar">
+            <div class="datatable-toolbar-start">
+                <input
+                    type="text"
+                    name="search"
+                    value="{{ search }}"
+                    placeholder="{% trans 'Buscar por numero, titulo o proveedor...' %}"
+                    class="input input-sm datatable-search"
+                    hx-get="{% url 'expenses:expense_list' %}"
+                    hx-trigger="keyup changed delay:400ms"
+                    hx-target="#expenses-table-container"
+                    hx-include="[name='status'],[name='category'],[name='date_from'],[name='date_to']"
+                    hx-push-url="true">
+                <input
+                    type="date"
+                    name="date_from"
+                    value="{{ date_from }}"
+                    class="input input-sm"
+                    style="width: 150px"
+                    hx-get="{% url 'expenses:expense_list' %}"
+                    hx-trigger="change"
+                    hx-target="#expenses-table-container"
+                    hx-include="[name='search'],[name='status'],[name='category'],[name='date_to']"
+                    hx-push-url="true">
+                <input
+                    type="date"
+                    name="date_to"
+                    value="{{ date_to }}"
+                    class="input input-sm"
+                    style="width: 150px"
+                    hx-get="{% url 'expenses:expense_list' %}"
+                    hx-trigger="change"
+                    hx-target="#expenses-table-container"
+                    hx-include="[name='search'],[name='status'],[name='category'],[name='date_from']"
+                    hx-push-url="true">
+            </div>
+            <div class="datatable-toolbar-end">
+                <select
+                    name="status"
+                    class="select select-sm"
+                    style="width: 160px"
+                    hx-get="{% url 'expenses:expense_list' %}"
+                    hx-trigger="change"
+                    hx-target="#expenses-table-container"
+                    hx-include="[name='search'],[name='category'],[name='date_from'],[name='date_to']"
+                    hx-push-url="true">
+                    <option value="">{% trans "Todos los estados" %}</option>
+                    <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>{% trans "Borrador" %}</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>{% trans "Pendiente" %}</option>
+                    <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>{% trans "Aprobado" %}</option>
+                    <option value="paid" {% if status_filter == 'paid' %}selected{% endif %}>{% trans "Pagado" %}</option>
+                    <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>{% trans "Rechazado" %}</option>
+                </select>
+                <select
+                    name="category"
+                    class="select select-sm"
+                    style="width: 160px"
+                    hx-get="{% url 'expenses:expense_list' %}"
+                    hx-trigger="change"
+                    hx-target="#expenses-table-container"
+                    hx-include="[name='search'],[name='status'],[name='date_from'],[name='date_to']"
+                    hx-push-url="true">
+                    <option value="">{% trans "Todas las categorias" %}</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.pk }}" {% if category_filter == cat.pk|slugify %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- Table Container -->
+        <div id="expenses-table-container">
+            {% include "expenses/partials/expense_table_body.html" %}
+        </div>
+    </div>
+</div>

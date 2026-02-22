@@ -1,0 +1,76 @@
+{% load i18n %}
+{% load djicons %}
+
+<div class="p-4" x-data="{ deleteId: null }">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold">{% trans "Categorias de Gastos" %}</h2>
+        <button class="btn color-primary btn-sm"
+            hx-get="{% url 'expenses:category_create' %}"
+            hx-target="#main-content-area"
+            hx-push-url="true">
+            {% icon "add-outline" %} {% trans "Nueva Categoria" %}
+        </button>
+    </div>
+
+    {% if categories %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for cat in categories %}
+        <div class="card">
+            <div class="card-body">
+                <div class="flex items-start justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background-color: {{ cat.color }}20; color: {{ cat.color }}">
+                            {% icon cat.icon css_class="text-xl" %}
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">{{ cat.name }}</h3>
+                            {% if cat.description %}
+                            <p class="text-sm text-muted">{{ cat.description|truncatewords:10 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <span class="badge badge-sm">{{ cat.expense_count }} {% trans "gastos" %}</span>
+                </div>
+
+                <div class="flex justify-end gap-2 mt-4">
+                    <button class="btn btn-ghost btn-sm"
+                        hx-get="{% url 'expenses:category_edit' cat.pk %}"
+                        hx-target="#main-content-area"
+                        hx-push-url="true">
+                        {% icon "create-outline" %} {% trans "Editar" %}
+                    </button>
+                    {% if cat.expense_count == 0 %}
+                    <button class="btn btn-ghost btn-sm color-error"
+                        hx-post="{% url 'expenses:category_delete' cat.pk %}"
+                        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                        hx-confirm="{% trans 'Eliminar esta categoria?' %}"
+                        hx-target="#main-content-area">
+                        {% icon "trash-outline" %}
+                    </button>
+                    {% endif %}
+                </div>
+
+                {% if not cat.is_active %}
+                <div class="mt-2">
+                    <span class="badge badge-sm color-warning">{% trans "Inactiva" %}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-12">
+            {% icon "pricetags-outline" css_class="text-5xl block mx-auto mb-3 text-muted" %}
+            <p class="text-muted mb-3">{% trans "No hay categorias creadas" %}</p>
+            <button class="btn color-primary btn-sm"
+                hx-get="{% url 'expenses:category_create' %}"
+                hx-target="#main-content-area"
+                hx-push-url="true">
+                {% icon "add-outline" %} {% trans "Crear Primera Categoria" %}
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>

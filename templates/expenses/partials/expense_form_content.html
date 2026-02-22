@@ -1,0 +1,130 @@
+{% load i18n %}
+{% load djicons %}
+
+<div class="p-4">
+    <div class="flex items-center gap-3 mb-4">
+        <button class="btn btn-ghost btn-sm"
+            hx-get="{% url 'expenses:expense_list' %}"
+            hx-target="#main-content-area"
+            hx-push-url="true">
+            {% icon "arrow-back-outline" %}
+        </button>
+        <h2 class="text-xl font-semibold">
+            {% if is_edit %}{% trans "Editar Gasto" %}{% else %}{% trans "Nuevo Gasto" %}{% endif %}
+        </h2>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post"
+                  enctype="multipart/form-data"
+                  hx-post="{% if is_edit %}{% url 'expenses:expense_edit' expense.pk %}{% else %}{% url 'expenses:expense_create' %}{% endif %}"
+                  hx-target="#main-content-area">
+                {% csrf_token %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Title -->
+                    <div class="form-group md:col-span-2">
+                        <label class="form-group-label">{% trans "Titulo" %} *</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <p class="text-sm text-error mt-1">{{ form.title.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Category -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Categoria" %}</label>
+                        {{ form.category }}
+                    </div>
+
+                    <!-- Supplier -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Proveedor" %}</label>
+                        {{ form.supplier }}
+                    </div>
+
+                    <!-- Amount -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Importe (Neto)" %} *</label>
+                        {{ form.amount }}
+                        {% if form.amount.errors %}
+                        <p class="text-sm text-error mt-1">{{ form.amount.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tax Rate -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "IVA (%)" %}</label>
+                        {{ form.tax_rate }}
+                    </div>
+
+                    <!-- Expense Date -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Fecha del Gasto" %} *</label>
+                        {{ form.expense_date }}
+                        {% if form.expense_date.errors %}
+                        <p class="text-sm text-error mt-1">{{ form.expense_date.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Due Date -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Fecha de Vencimiento" %}</label>
+                        {{ form.due_date }}
+                    </div>
+
+                    <!-- Status -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Estado" %}</label>
+                        {{ form.status }}
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Metodo de Pago" %}</label>
+                        {{ form.payment_method }}
+                    </div>
+
+                    <!-- Reference Number -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Numero de Referencia" %}</label>
+                        {{ form.reference_number }}
+                        <p class="text-xs text-muted mt-1">{% trans "Numero de factura/recibo del proveedor" %}</p>
+                    </div>
+
+                    <!-- Receipt Image -->
+                    <div class="form-group">
+                        <label class="form-group-label">{% trans "Imagen del Recibo" %}</label>
+                        {{ form.receipt_image }}
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group md:col-span-2">
+                        <label class="form-group-label">{% trans "Descripcion" %}</label>
+                        {{ form.description }}
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="form-group md:col-span-2">
+                        <label class="form-group-label">{% trans "Notas" %}</label>
+                        {{ form.notes }}
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" class="btn btn-outline"
+                        hx-get="{% url 'expenses:expense_list' %}"
+                        hx-target="#main-content-area"
+                        hx-push-url="true">
+                        {% trans "Cancelar" %}
+                    </button>
+                    <button type="submit" class="btn color-primary">
+                        {% icon "save-outline" %}
+                        {% if is_edit %}{% trans "Guardar Cambios" %}{% else %}{% trans "Crear Gasto" %}{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

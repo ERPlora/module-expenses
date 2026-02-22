@@ -1,0 +1,244 @@
+{% load i18n %}
+{% load djicons %}
+
+<div class="p-4" x-data="{ showDeleteConfirm: false }">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+            <button class="btn btn-ghost btn-sm"
+                hx-get="{% url 'expenses:expense_list' %}"
+                hx-target="#main-content-area"
+                hx-push-url="true">
+                {% icon "arrow-back-outline" %}
+            </button>
+            <div>
+                <h2 class="text-xl font-semibold">{{ expense.title }}</h2>
+                <span class="text-sm text-muted">{{ expense.expense_number }}</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            {% if expense.status == 'draft' or expense.status == 'pending' %}
+            <button class="btn btn-sm color-success"
+                hx-post="{% url 'expenses:expense_approve' expense.pk %}"
+                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                hx-target="#main-content-area"
+                hx-confirm="{% trans 'Aprobar este gasto?' %}">
+                {% icon "checkmark-circle-outline" %} {% trans "Aprobar" %}
+            </button>
+            {% endif %}
+            {% if expense.status == 'approved' or expense.status == 'draft' %}
+            <button class="btn btn-sm color-primary"
+                hx-post="{% url 'expenses:expense_mark_paid' expense.pk %}"
+                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                hx-target="#main-content-area"
+                hx-confirm="{% trans 'Marcar como pagado?' %}">
+                {% icon "cash-outline" %} {% trans "Marcar Pagado" %}
+            </button>
+            {% endif %}
+            <button class="btn btn-sm btn-outline"
+                hx-get="{% url 'expenses:expense_edit' expense.pk %}"
+                hx-target="#main-content-area"
+                hx-push-url="true">
+                {% icon "create-outline" %} {% trans "Editar" %}
+            </button>
+            <button class="btn btn-sm btn-outline color-error"
+                @click="showDeleteConfirm = true">
+                {% icon "trash-outline" %}
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- Main Info -->
+        <div class="lg:col-span-2">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Detalles del Gasto" %}</h3>
+                </div>
+                <div class="list">
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Titulo" %}</div>
+                        </div>
+                        <div class="list-item-end">{{ expense.title }}</div>
+                    </div>
+                    {% if expense.description %}
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Descripcion" %}</div>
+                        </div>
+                        <div class="list-item-end">{{ expense.description }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Categoria" %}</div>
+                        </div>
+                        <div class="list-item-end">
+                            {% if expense.category %}
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full" style="background-color: {{ expense.category.color }}"></div>
+                                {{ expense.category.name }}
+                            </div>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Proveedor" %}</div>
+                        </div>
+                        <div class="list-item-end">
+                            {% if expense.supplier %}
+                            <a class="text-primary cursor-pointer"
+                               hx-get="{% url 'expenses:supplier_detail' expense.supplier.pk %}"
+                               hx-target="#main-content-area"
+                               hx-push-url="true">
+                                {{ expense.supplier.name }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Fecha del Gasto" %}</div>
+                        </div>
+                        <div class="list-item-end">{{ expense.expense_date|date:"d/m/Y" }}</div>
+                    </div>
+                    {% if expense.due_date %}
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Fecha de Vencimiento" %}</div>
+                        </div>
+                        <div class="list-item-end">{{ expense.due_date|date:"d/m/Y" }}</div>
+                    </div>
+                    {% endif %}
+                    {% if expense.reference_number %}
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Referencia del Proveedor" %}</div>
+                        </div>
+                        <div class="list-item-end">{{ expense.reference_number }}</div>
+                    </div>
+                    {% endif %}
+                    {% if expense.payment_method %}
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Metodo de Pago" %}</div>
+                        </div>
+                        <div class="list-item-end">{{ expense.payment_method }}</div>
+                    </div>
+                    {% endif %}
+                    {% if expense.notes %}
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Notas" %}</div>
+                        </div>
+                        <div class="list-item-end">{{ expense.notes }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div>
+            <!-- Amounts -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Importes" %}</h3>
+                </div>
+                <div class="list">
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "Base Imponible" %}</div>
+                        </div>
+                        <div class="list-item-end font-semibold">{{ expense.amount|floatformat:2 }} {{ HUB_CONFIG.currency|default:"EUR" }}</div>
+                    </div>
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label">{% trans "IVA" %} ({{ expense.tax_rate }}%)</div>
+                        </div>
+                        <div class="list-item-end">{{ expense.tax_amount|floatformat:2 }} {{ HUB_CONFIG.currency|default:"EUR" }}</div>
+                    </div>
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-label font-bold">{% trans "Total" %}</div>
+                        </div>
+                        <div class="list-item-end font-bold text-lg">{{ expense.total_amount|floatformat:2 }} {{ HUB_CONFIG.currency|default:"EUR" }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Estado" %}</h3>
+                </div>
+                <div class="card-body">
+                    {% if expense.status == 'draft' %}
+                        <span class="badge">{% trans "Borrador" %}</span>
+                    {% elif expense.status == 'pending' %}
+                        <span class="badge color-warning">{% trans "Pendiente de Aprobacion" %}</span>
+                    {% elif expense.status == 'approved' %}
+                        <span class="badge color-primary">{% trans "Aprobado" %}</span>
+                    {% elif expense.status == 'paid' %}
+                        <span class="badge color-success">{% trans "Pagado" %}</span>
+                    {% elif expense.status == 'rejected' %}
+                        <span class="badge color-error">{% trans "Rechazado" %}</span>
+                    {% endif %}
+
+                    {% if expense.approved_by %}
+                    <div class="mt-3 text-sm text-muted">
+                        {% trans "Aprobado por" %}: {{ expense.approved_by.name }}
+                        <br>{{ expense.approved_at|date:"d/m/Y H:i" }}
+                    </div>
+                    {% endif %}
+                    {% if expense.paid_at %}
+                    <div class="mt-2 text-sm text-muted">
+                        {% trans "Pagado el" %}: {{ expense.paid_at|date:"d/m/Y H:i" }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Receipt Image -->
+            {% if expense.receipt_image %}
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% trans "Recibo" %}</h3>
+                </div>
+                <div class="card-body">
+                    <img src="{{ expense.receipt_image.url }}" alt="{% trans 'Recibo' %}" class="w-full rounded-lg" />
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-backdrop" :data-state="showDeleteConfirm ? 'open' : 'closed'" @click.self="showDeleteConfirm = false">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">{% trans "Eliminar Gasto" %}</h3>
+                <button class="modal-close" @click="showDeleteConfirm = false">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>{% trans "Estas seguro de que quieres eliminar este gasto?" %}</p>
+                <p class="text-sm text-muted mt-2">{{ expense.expense_number }} - {{ expense.title }}</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @click="showDeleteConfirm = false">{% trans "Cancelar" %}</button>
+                <button class="btn color-error"
+                    hx-post="{% url 'expenses:expense_delete' expense.pk %}"
+                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                    hx-target="#main-content-area"
+                    hx-on::after-request="if(event.detail.successful) { window.location.href = '/m/expenses/list/'; }">
+                    {% icon "trash-outline" %} {% trans "Eliminar" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
