@@ -272,8 +272,8 @@ def expense_edit(request, pk):
 @login_required
 def expense_delete(request, pk):
     hub = _hub_id(request)
+    expense = get_object_or_404(Expense, id=pk, hub_id=hub, is_deleted=False)
     try:
-        expense = get_object_or_404(Expense, id=pk, hub_id=hub, is_deleted=False)
         expense.delete()  # Soft delete
         return JsonResponse({'success': True})
     except Exception as e:

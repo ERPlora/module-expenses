@@ -5,8 +5,6 @@
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-semibold">{% trans "Informes de Gastos" %}</h2>
         <div class="flex gap-2">
-            {% for p_key, p_label in "week,Semana|month,Mes|quarter,Trimestre|year,Ano"|make_list %}
-            {% endfor %}
             <button class="btn btn-sm {% if period == 'week' %}color-primary{% else %}btn-outline{% endif %}"
                 hx-get="{% url 'expenses:reports' %}?period=week"
                 hx-target="#main-content-area"
