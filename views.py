@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_http_methods
 
-from apps.accounts.decorators import login_required
+from apps.accounts.decorators import login_required, permission_required
 from apps.core.htmx import htmx_view
 from apps.modules_runtime.navigation import with_module_nav
 
@@ -636,6 +636,7 @@ def reports(request):
 
 @require_http_methods(["GET"])
 @login_required
+@permission_required('expenses.manage_settings')
 @with_module_nav('expenses', 'settings')
 @htmx_view('expenses/pages/settings.html', 'expenses/partials/settings_content.html')
 def settings_view(request):
@@ -651,6 +652,7 @@ def settings_view(request):
 
 @require_http_methods(["POST"])
 @login_required
+@permission_required('expenses.manage_settings')
 def settings_save(request):
     hub = _hub_id(request)
 
