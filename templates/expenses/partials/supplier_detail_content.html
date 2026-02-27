@@ -1,15 +1,10 @@
 {% load i18n %}
 {% load djicons %}
+<div data-back-url="{% url 'expenses:suppliers' %}" hidden></div>
 
 <div class="p-4" x-data="{ showDeleteConfirm: false }">
     <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-3">
-            <button class="btn btn-ghost btn-sm"
-                hx-get="{% url 'expenses:suppliers' %}"
-                hx-target="#main-content-area"
-                hx-push-url="true">
-                {% icon "arrow-back-outline" %}
-            </button>
             <h2 class="text-xl font-semibold">{{ supplier.name }}</h2>
             {% if not supplier.is_active %}
             <span class="badge color-warning">{% trans "Inactivo" %}</span>
