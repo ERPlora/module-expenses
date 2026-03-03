@@ -38,3 +38,22 @@ PERMISSIONS = [
     'expenses.view_reports',
     'expenses.manage_settings',
 ]
+
+ROLE_PERMISSIONS = {
+    "admin": ["*"],
+    "manager": [
+        "add_expense",
+        "add_supplier",
+        "approve_expense",
+        "change_expense",
+        "change_supplier",
+        "view_expense",
+        "view_reports",
+        "view_supplier",
+    ],
+    "employee": [
+        "add_expense",
+        "view_expense",
+        "view_supplier",
+    ],
+}
