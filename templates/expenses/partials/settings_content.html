@@ -25,7 +25,7 @@
                         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                     },
                     body: JSON.stringify(this.settings)
-                });
+                },
 
                 const result = await response.json();
 
@@ -50,7 +50,7 @@
                         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                     },
                     body: JSON.stringify(this.settings)
-                });
+                },
 
                 const result = await response.json();
 
@@ -64,8 +64,7 @@
             } finally {
                 this.saving = false;
             }
-        },
-    }" class="p-4">
+        }}" class="p-4">
 
     <!-- Approval Settings -->
     <div class="card mb-4">
