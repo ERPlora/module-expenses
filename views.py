@@ -12,6 +12,7 @@ from django.views.decorators.http import require_http_methods
 
 from apps.accounts.decorators import login_required, permission_required
 from apps.core.htmx import htmx_view
+from apps.core.media_helpers import handle_image_field
 from apps.modules_runtime.navigation import with_module_nav
 
 from .forms import (
@@ -206,6 +207,8 @@ def expense_create(request):
             if not expense.tax_rate:
                 expense.tax_rate = settings.default_tax_rate
             expense.save()
+            if handle_image_field(request, expense, 'receipt_image'):
+                expense.save(update_fields=['receipt_image'])
             # Redirect via HTMX
             from django.http import HttpResponse
             response = HttpResponse()
@@ -243,7 +246,9 @@ def expense_edit(request, pk):
     if request.method == 'POST':
         form = ExpenseForm(request.POST, request.FILES, instance=expense)
         if form.is_valid():
-            form.save()
+            expense = form.save()
+            if handle_image_field(request, expense, 'receipt_image'):
+                expense.save(update_fields=['receipt_image'])
             from django.http import HttpResponse
             response = HttpResponse()
             response['HX-Redirect'] = f'/m/expenses/{expense.pk}/'

@@ -91,7 +91,7 @@
                     <!-- Receipt Image -->
                     <div class="form-group">
                         <label class="form-group-label">{% trans "Imagen del Recibo" %}</label>
-                        {{ form.receipt_image }}
+                        {% include "core/components/media_picker.html" with field_name="receipt_image" current_url=expense.receipt_image.url folder="expenses" %}
                     </div>
 
                     <!-- Description -->
