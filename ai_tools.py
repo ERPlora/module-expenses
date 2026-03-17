@@ -128,3 +128,134 @@ class GetExpenseSummary(AssistantTool):
                 for item in by_category
             ],
         }
+
+
+@register_tool
+class UpdateExpense(AssistantTool):
+    name = "update_expense"
+    description = "Update an expense: title, amount, category, supplier, expense_date, notes, reference_number, payment_method."
+    module_id = "expenses"
+    required_permission = "expenses.change_expense"
+    requires_confirmation = True
+    parameters = {
+        "type": "object",
+        "properties": {
+            "expense_id": {"type": "string", "description": "Expense ID"},
+            "title": {"type": "string", "description": "Expense title"},
+            "amount": {"type": "string", "description": "Amount before tax"},
+            "category_id": {"type": "string", "description": "Category ID"},
+            "supplier_id": {"type": "string", "description": "Supplier ID"},
+            "expense_date": {"type": "string", "description": "Date (YYYY-MM-DD)"},
+            "due_date": {"type": "string", "description": "Due date (YYYY-MM-DD)"},
+            "notes": {"type": "string", "description": "Notes"},
+            "reference_number": {"type": "string", "description": "Supplier invoice/receipt number"},
+            "payment_method": {"type": "string", "description": "Payment method"},
+        },
+        "required": ["expense_id"],
+        "additionalProperties": False,
+    }
+
+    def execute(self, args, request):
+        from decimal import Decimal
+        from expenses.models import Expense
+        try:
+            e = Expense.objects.get(id=args['expense_id'])
+        except Expense.DoesNotExist:
+            return {"error": "Expense not found"}
+        updatable_str = ['title', 'category_id', 'supplier_id', 'expense_date',
+                         'due_date', 'notes', 'reference_number', 'payment_method']
+        fields_updated = []
+        for field in updatable_str:
+            if field in args:
+                setattr(e, field, args[field])
+                fields_updated.append(field)
+        if 'amount' in args:
+            e.amount = Decimal(args['amount'])
+            fields_updated.append('amount')
+        if not fields_updated:
+            return {"error": "No fields to update"}
+        e.save()  # triggers auto tax/total recalculation in model save()
+        return {"id": str(e.id), "expense_number": e.expense_number, "total_amount": str(e.total_amount), "updated": fields_updated}
+
+
+@register_tool
+class DeleteExpense(AssistantTool):
+    name = "delete_expense"
+    description = "Delete an expense. Only draft expenses can be deleted."
+    module_id = "expenses"
+    required_permission = "expenses.delete_expense"
+    requires_confirmation = True
+    parameters = {
+        "type": "object",
+        "properties": {
+            "expense_id": {"type": "string", "description": "Expense ID"},
+        },
+        "required": ["expense_id"],
+        "additionalProperties": False,
+    }
+
+    def execute(self, args, request):
+        from expenses.models import Expense
+        try:
+            e = Expense.objects.get(id=args['expense_id'])
+        except Expense.DoesNotExist:
+            return {"error": "Expense not found"}
+        if e.status != 'draft':
+            return {"error": f"Cannot delete expense with status '{e.status}'. Only draft expenses can be deleted."}
+        expense_id = str(e.id)
+        e.delete()
+        return {"deleted": True, "id": expense_id}
+
+
+@register_tool
+class BulkCreateExpenses(AssistantTool):
+    name = "bulk_create_expenses"
+    description = "Create multiple expenses at once (max 50)."
+    module_id = "expenses"
+    required_permission = "expenses.change_expense"
+    requires_confirmation = True
+    parameters = {
+        "type": "object",
+        "properties": {
+            "expenses": {
+                "type": "array",
+                "description": "List of expenses to create (max 50)",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "title": {"type": "string"},
+                        "amount": {"type": "string"},
+                        "category_id": {"type": "string"},
+                        "supplier_id": {"type": "string"},
+                        "expense_date": {"type": "string"},
+                        "notes": {"type": "string"},
+                    },
+                    "required": ["title", "amount"],
+                    "additionalProperties": False,
+                },
+            },
+        },
+        "required": ["expenses"],
+        "additionalProperties": False,
+    }
+
+    def execute(self, args, request):
+        from datetime import date
+        from decimal import Decimal
+        from expenses.models import Expense
+        expenses = args['expenses']
+        if len(expenses) > 50:
+            return {"error": "Cannot create more than 50 expenses at once"}
+        created = []
+        for data in expenses:
+            e = Expense.objects.create(
+                title=data['title'],
+                amount=Decimal(data['amount']),
+                category_id=data.get('category_id'),
+                supplier_id=data.get('supplier_id'),
+                expense_date=data.get('expense_date', date.today()),
+                notes=data.get('notes', ''),
+                status='draft',
+            )
+            created.append({"id": str(e.id), "expense_number": e.expense_number, "total_amount": str(e.total_amount)})
+        return {"created": created, "count": len(created)}
