@@ -2,8 +2,8 @@ from django.utils.translation import gettext_lazy as _
 
 MODULE_ID = 'expenses'
 MODULE_NAME = _('Expenses')
-MODULE_VERSION = '1.0.0'
-MODULE_ICON = 'wallet-outline'
+MODULE_VERSION = '1.0.1'
+MODULE_ICON = 'material:price_check'
 MODULE_DESCRIPTION = _('Expense tracking, suppliers, and purchase order management')
 MODULE_AUTHOR = 'ERPlora'
 MODULE_CATEGORY = 'purchasing'
