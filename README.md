@@ -5,8 +5,9 @@
 | Property | Value |
 |----------|-------|
 | **Module ID** | `expenses` |
-| **Version** | `1.0.0` |
-| **Icon** | `wallet-outline` |
+| **Version** | `1.0.1` |
+| **Icon** | `material:price_check` |
+| **Category** | `purchasing` |
 | **Dependencies** | None |
 
 ## Models
@@ -40,7 +41,7 @@ Expense category for organizing expenses.
 | `description` | TextField | optional |
 | `is_active` | BooleanField |  |
 | `sort_order` | PositiveIntegerField |  |
-| `parent` | ForeignKey | → `expenses.ExpenseCategory`, on_delete=SET_NULL, optional |
+| `parent` | ForeignKey | -> `expenses.ExpenseCategory`, on_delete=SET_NULL, optional |
 
 ### `Supplier`
 
@@ -65,7 +66,7 @@ Supplier/vendor for expenses.
 
 **Methods:**
 
-- `update_totals()` — Recalculate total_spent and last_purchase_date from paid expenses.
+- `update_totals()` -- Recalculate total_spent and last_purchase_date from paid expenses.
 
 ### `Expense`
 
@@ -76,8 +77,8 @@ Main expense record.
 | `expense_number` | CharField | max_length=50 |
 | `title` | CharField | max_length=255 |
 | `description` | TextField | optional |
-| `category` | ForeignKey | → `expenses.ExpenseCategory`, on_delete=SET_NULL, optional |
-| `supplier` | ForeignKey | → `expenses.Supplier`, on_delete=SET_NULL, optional |
+| `category` | ForeignKey | -> `expenses.ExpenseCategory`, on_delete=SET_NULL, optional |
+| `supplier` | ForeignKey | -> `expenses.Supplier`, on_delete=SET_NULL, optional |
 | `amount` | DecimalField |  |
 | `tax_rate` | DecimalField |  |
 | `tax_amount` | DecimalField |  |
@@ -89,13 +90,13 @@ Main expense record.
 | `reference_number` | CharField | max_length=100, optional |
 | `receipt_image` | ImageField | max_length=100, optional |
 | `notes` | TextField | optional |
-| `approved_by` | ForeignKey | → `accounts.LocalUser`, on_delete=SET_NULL, optional |
+| `approved_by` | ForeignKey | -> `accounts.LocalUser`, on_delete=SET_NULL, optional |
 | `approved_at` | DateTimeField | optional |
 | `paid_at` | DateTimeField | optional |
 
 **Methods:**
 
-- `generate_expense_number()` — Generate a unique expense number for the hub.
+- `generate_expense_number()` -- Generate a unique expense number for the hub.
 
 ### `RecurringExpense`
 
@@ -104,8 +105,8 @@ Template for recurring costs (rent, utilities, subscriptions).
 | Field | Type | Details |
 |-------|------|---------|
 | `title` | CharField | max_length=255 |
-| `category` | ForeignKey | → `expenses.ExpenseCategory`, on_delete=SET_NULL, optional |
-| `supplier` | ForeignKey | → `expenses.Supplier`, on_delete=SET_NULL, optional |
+| `category` | ForeignKey | -> `expenses.ExpenseCategory`, on_delete=SET_NULL, optional |
+| `supplier` | ForeignKey | -> `expenses.Supplier`, on_delete=SET_NULL, optional |
 | `amount` | DecimalField |  |
 | `tax_rate` | DecimalField |  |
 | `frequency` | CharField | max_length=20, choices: weekly, monthly, quarterly, yearly |
@@ -116,7 +117,7 @@ Template for recurring costs (rent, utilities, subscriptions).
 
 **Methods:**
 
-- `get_next_date_after()` — Calculate the next due date based on frequency.
+- `get_next_date_after()` -- Calculate the next due date based on frequency.
 
 ## Cross-Module Relationships
 
@@ -206,6 +207,8 @@ List expenses with optional filters by status, category, or date range.
 | `date_to` | string | No | End date (YYYY-MM-DD) |
 | `limit` | integer | No | Max results (default 20) |
 
+Permission: `expenses.view_expense`
+
 ### `create_expense`
 
 Record a new expense.
@@ -219,6 +222,37 @@ Record a new expense.
 | `expense_date` | string | No | Date (YYYY-MM-DD). Defaults to today. |
 | `notes` | string | No | Additional notes |
 
+Permission: `expenses.change_expense`. Requires confirmation.
+
+### `update_expense`
+
+Update an expense: title, amount, category, supplier, expense_date, notes, reference_number, payment_method.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `expense_id` | string | Yes | Expense ID |
+| `title` | string | No | Expense title |
+| `amount` | string | No | Amount before tax |
+| `category_id` | string | No | Category ID |
+| `supplier_id` | string | No | Supplier ID |
+| `expense_date` | string | No | Date (YYYY-MM-DD) |
+| `due_date` | string | No | Due date (YYYY-MM-DD) |
+| `notes` | string | No | Notes |
+| `reference_number` | string | No | Supplier invoice/receipt number |
+| `payment_method` | string | No | Payment method |
+
+Permission: `expenses.change_expense`. Requires confirmation.
+
+### `delete_expense`
+
+Delete an expense. Only draft expenses can be deleted.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `expense_id` | string | Yes | Expense ID |
+
+Permission: `expenses.delete_expense`. Requires confirmation.
+
 ### `get_expense_summary`
 
 Get expense totals by category for a date range.
@@ -228,11 +262,24 @@ Get expense totals by category for a date range.
 | `date_from` | string | No | Start date (YYYY-MM-DD) |
 | `date_to` | string | No | End date (YYYY-MM-DD) |
 
+Permission: `expenses.view_expense`
+
+### `bulk_create_expenses`
+
+Create multiple expenses at once (max 50).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `expenses` | array | Yes | List of expenses to create (max 50). Each item: `title` (required), `amount` (required), `category_id`, `supplier_id`, `expense_date`, `notes`. |
+
+Permission: `expenses.change_expense`. Requires confirmation.
+
 ## File Structure
 
 ```
 README.md
 __init__.py
+ai_context.py
 ai_tools.py
 apps.py
 forms.py
@@ -244,6 +291,10 @@ migrations/
   __init__.py
 models.py
 module.py
+static/
+  icons/
+    ion/
+      (22 SVG icons)
 templates/
   expenses/
     pages/
