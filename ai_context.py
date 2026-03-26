@@ -72,3 +72,18 @@ CONTEXT = """
 - RecurringExpense → ExpenseCategory (FK, nullable)
 - RecurringExpense → Supplier (FK, nullable)
 """
+
+SOPS = [
+    {
+        "id": "new_expense",
+        "triggers": {
+            "es": ["nuevo gasto", "registrar gasto", "añadir gasto", "crear gasto"],
+            "en": ["new expense", "add expense", "create expense", "record expense"],
+        },
+        "description": {"es": "Registrar un gasto", "en": "Record an expense"},
+        "steps": [
+            {"tool": "create_expense", "description": "Create expense with amount, category, and description"},
+        ],
+        "modules_required": ["expenses"],
+    },
+]
