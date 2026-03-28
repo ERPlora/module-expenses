@@ -7,6 +7,7 @@ MODULE_ICON = 'material:price_check'
 MODULE_DESCRIPTION = _('Expense tracking, suppliers, and purchase order management')
 MODULE_AUTHOR = 'ERPlora'
 MODULE_CATEGORY = 'purchasing'
+HAS_MODELS = True
 
 MENU = {
     'label': _('Expenses'),
